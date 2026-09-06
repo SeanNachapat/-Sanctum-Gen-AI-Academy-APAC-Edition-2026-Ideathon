@@ -93,10 +93,48 @@ app.get('/api/health', (_req: Request, res: Response) => {
 app.post('/api/gemini/reflect', async (req: Request, res: Response) => {
   try {
     const body = (req.body && typeof req.body === 'object') ? req.body : {};
-    const { title = '', content = '', category = 'reflection', mood = 'thoughtful', tone = 'empathic' } = body;
+    const { 
+      title = '', 
+      content = '', 
+      category = 'reflection', 
+      mood = 'thoughtful', 
+      tone = 'empathic',
+      stagedInput,
+      emotions: reqEmotions
+    } = body;
 
-    if (!content || typeof content !== 'string' || content.trim().length === 0) {
-      res.status(400).json({ error: 'Journal content is required for reflection' });
+    const EMOTION_MAP: Record<string, { label: string; color: string; name: string }> = {
+      peaceful: { label: 'Peaceful & Serene', color: '#5E5CE6', name: 'Twilight Indigo' },
+      grateful: { label: 'Grateful & Warm', color: '#FF9F0A', name: 'Starlight Amber' },
+      joyful: { label: 'Joyful & Content', color: '#30D158', name: 'Soft Mint' },
+      tender: { label: 'Loved & Tender', color: '#FF375F', name: 'Rose Velvet' },
+      thoughtful: { label: 'Thoughtful & Pensive', color: '#64D2FF', name: 'Moonlit Sky' },
+      overwhelmed: { label: 'Overwhelmed & Full', color: '#BF5AF2', name: 'Deep Amethyst' },
+      restless: { label: 'Restless & Unsettled', color: '#FF453A', name: 'Muted Ember' },
+      exhausted: { label: 'Weary & Resting', color: '#8E8E93', name: 'Quiet Slate' },
+    };
+
+    // Helper to extract colors and gradient
+    const buildGradient = (colors: string[]): string => {
+      if (!colors || colors.length === 0) return 'linear-gradient(135deg, #5E5CE6 0%, #7B79FF 100%)';
+      if (colors.length === 1) return `linear-gradient(135deg, ${colors[0]} 0%, ${colors[0]}cc 100%)`;
+      const stops = colors.map((c, i) => `${c} ${Math.round((i / (colors.length - 1)) * 100)}%`).join(', ');
+      return `linear-gradient(135deg, ${stops})`;
+    };
+
+    // Selected feelings input from stagedInput or req
+    const userSelectedEmotions: string[] = Array.isArray(stagedInput?.emotions) && stagedInput.emotions.length > 0
+      ? stagedInput.emotions
+      : Array.isArray(reqEmotions) && reqEmotions.length > 0
+      ? reqEmotions
+      : stagedInput?.emotion
+      ? [stagedInput.emotion]
+      : mood
+      ? [mood]
+      : ['Peaceful & Serene'];
+
+    if ((!content || typeof content !== 'string' || content.trim().length === 0) && !stagedInput) {
+      res.status(400).json({ error: 'Journal content or staged input is required for reflection' });
       return;
     }
 
@@ -110,29 +148,68 @@ app.post('/api/gemini/reflect', async (req: Request, res: Response) => {
 
     const toneGuide = toneInstructions[tone] || toneInstructions.empathic;
 
-    const systemPrompt = `You are ReflectAI, an intelligent, compassionate, and wise journaling companion and thinking partner.
-The user has shared an authentic journal entry.
-Your goal is to provide a thoughtful, uplifting, and structured reflection.
+    const systemPrompt = `You are Sanctum, a tranquil, wise, and soothing bedtime reflection companion.
+The user is winding down before going to bed. They have shared their thoughts, reflections, or staged answers about their day.
+The user can select multiple feelings that describe tonight. Your task is to synthesize their day into a peaceful, uncluttered bedtime journal organized into distinct topics, weave together their selected feelings into a cohesive emotional gradient, and assign the harmonious emotion color gradient for their night calendar.
 
-Tone Guidance:
+Emotion Palette to reference:
+- "Peaceful & Serene" (Hex: "#5E5CE6", Name: "Twilight Indigo") -> calm, stillness, quiet satisfaction
+- "Grateful & Warm" (Hex: "#FF9F0A", Name: "Starlight Amber") -> gratitude, appreciation, warmth
+- "Joyful & Content" (Hex: "#30D158", Name: "Soft Mint") -> cheerfulness, vitality, success
+- "Loved & Tender" (Hex: "#FF375F", Name: "Rose Velvet") -> love, intimacy, connection
+- "Thoughtful & Pensive" (Hex: "#64D2FF", Name: "Moonlit Sky") -> deep reflection, curiosity
+- "Overwhelmed & Full" (Hex: "#BF5AF2", Name: "Deep Amethyst") -> sensory overload, heavy thoughts
+- "Restless & Unsettled" (Hex: "#FF453A", Name: "Muted Ember") -> tension, racing thoughts
+- "Weary & Resting" (Hex: "#8E8E93", Name: "Quiet Slate") -> physical/mental exhaustion, deep sleep
+
+Tone & Style:
 ${toneGuide}
+Keep text minimal, elegant, comforting, and free of corporate or robotic filler words.
+Structure the journal into 3-4 distinct topics, such as:
+1. "Today's Rhythm" (The narrative of their day and milestones)
+2. "Unpacking & Letting Go" (Releasing heavy thoughts, worries, or friction)
+3. "Gratitude & Small Sparks" (Cherishing small sweet moments)
+4. "Night Blessing & Rest" (A warm wish and peaceful perspective for the night)
 
-Respond with a well-structured JSON object containing the following keys:
-- "summary": A concise 1-2 sentence essence of what the user wrote.
-- "reflection": A thoughtful, deep, beautifully written paragraph (3-5 sentences) responding directly to the user's emotions, ideas, or experiences.
-- "keyTakeaways": An array of 3-4 bullet points highlighting key insights, realizations, or themes identified in their entry.
-- "actionItems": An array of 2-3 gentle, practical suggestions or micro-actions they could take next.
-- "suggestedFollowUps": An array of 2-3 provocative, reflective questions they could explore in conversation or future entries.
+Respond with a strictly valid JSON object containing:
+- "title": A poetic, gentle title for tonight's journal (e.g., "The Quiet Echo of Evening", "Setting Down the Day's Noise").
+- "emotions": An array of strings representing the feelings picked (e.g. ["Peaceful & Serene", "Grateful & Warm"]).
+- "emotion": A concise string naming the blend of feelings (e.g. "Peaceful & Grateful").
+- "emotionColors": An array of hex color codes corresponding to the emotions (e.g. ["#5E5CE6", "#FF9F0A"]).
+- "emotionColor": The primary hex code (e.g. "#5E5CE6").
+- "emotionGradient": A CSS linear-gradient string (e.g. "linear-gradient(135deg, #5E5CE6 0%, #FF9F0A 100%)").
+- "emotionColorName": The blended color name (e.g. "Twilight Indigo & Starlight Amber").
+- "bedtimeAffirmation": A 1-2 sentence soothing bedtime affirmation to help the user release tension and sleep peacefully.
+- "topics": An array of 3-4 topic objects, each having:
+  - "id": a slug (e.g., "rhythm", "release", "gratitude", "blessing")
+  - "title": topic title
+  - "icon": one of "moon", "wind", "sparkles", "heart", "stars", "compass"
+  - "content": 2-4 sentences of comforting, well-crafted prose for this topic
+- "summary": A 1-2 sentence essence of today.
+- "reflection": A cohesive 2-3 paragraph synthesis combining the topics.
+- "keyTakeaways": An array of 2-3 gentle, calming insights from today.
+- "actionItems": An array of 1-2 gentle morning intentions (e.g., "Begin tomorrow without rushing to a screen").
+- "suggestedFollowUps": An array of 2 gentle bedtime reflection questions if they wish to chat.`;
 
-Ensure the output is valid JSON strictly following this schema without Markdown codeblock wrapping if possible, or standard JSON inside triple backticks.`;
-
-    const userPrompt = `Journal Title: "${title || 'Untitled'}"
+    let userPrompt = '';
+    if (stagedInput) {
+      userPrompt = `User's Staged Bedtime Reflection:
+- Selected Feelings / Emotions: ${userSelectedEmotions.join(', ')}
+- Energy Level: "${stagedInput.energyLevel || 'Calm'}"
+- Today's Journey & Highlights: """${stagedInput.highlights || content || 'A quiet day with subtle moments.'}"""
+- Daily Themes/Tags: ${(stagedInput.tags && stagedInput.tags.length > 0) ? stagedInput.tags.join(', ') : 'Daily Life'}
+- Releasing & Letting Go: """${stagedInput.lettingGo || 'Mind is at peace, ready to rest.'}"""
+- Gratitude & Sweet Moments: """${stagedInput.gratitude || 'Grateful for warmth, breath, and stillness.'}"""
+- Date: "${stagedInput.date || new Date().toISOString().split('T')[0]}"`;
+    } else {
+      userPrompt = `Journal Title: "${title || 'Bedtime Reflection'}"
 Category: ${category}
-Mood: ${mood}
+Selected Feelings / Moods: ${userSelectedEmotions.join(', ')}
 Journal Entry:
 """
 ${content}
 """`;
+    }
 
     const { text, modelUsed } = await generateContentWithFallback({
       contents: `${systemPrompt}\n\n${userPrompt}`,
@@ -142,28 +219,84 @@ ${content}
     });
 
     try {
-      // Clean possible markdown code fences if returned
       const cleanJsonStr = text.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
       const parsed = JSON.parse(cleanJsonStr);
+
+      // Ensure emotionColors and emotionGradient exist and are valid
+      const parsedColors: string[] = Array.isArray(parsed.emotionColors) && parsed.emotionColors.length > 0
+        ? parsed.emotionColors.filter((c: any) => typeof c === 'string' && c.startsWith('#'))
+        : userSelectedEmotions.map(e => {
+            const lower = e.toLowerCase();
+            for (const [k, v] of Object.entries(EMOTION_MAP)) {
+              if (lower.includes(k) || lower.includes(v.label.toLowerCase())) return v.color;
+            }
+            return '#5E5CE6';
+          });
+
+      const finalColors = parsedColors.length > 0 ? parsedColors : ['#5E5CE6'];
+      const finalGradient = parsed.emotionGradient && typeof parsed.emotionGradient === 'string' && parsed.emotionGradient.startsWith('linear-gradient')
+        ? parsed.emotionGradient
+        : buildGradient(finalColors);
+
       res.json({
         ...parsed,
+        emotions: Array.isArray(parsed.emotions) && parsed.emotions.length > 0 ? parsed.emotions : userSelectedEmotions,
+        emotionColors: finalColors,
+        emotionGradient: finalGradient,
+        emotionColor: parsed.emotionColor || finalColors[0],
         modelUsed
       });
     } catch (parseErr) {
-      console.warn('Could not parse JSON response from Gemini, formatting raw fallback:', parseErr);
+      console.warn('Could not parse JSON response from Gemini, formatting fallback structure:', parseErr);
+      const fallbackColors = userSelectedEmotions.map(e => {
+        const lower = e.toLowerCase();
+        for (const [k, v] of Object.entries(EMOTION_MAP)) {
+          if (lower.includes(k) || lower.includes(v.label.toLowerCase())) return v.color;
+        }
+        return '#5E5CE6';
+      });
+      const finalColors = fallbackColors.length > 0 ? fallbackColors : ['#5E5CE6'];
       res.json({
-        summary: `Reflection on "${title || 'your entry'}"`,
+        title: title || 'Evening Stillness',
+        emotions: userSelectedEmotions,
+        emotion: userSelectedEmotions.join(' & '),
+        emotionColors: finalColors,
+        emotionGradient: buildGradient(finalColors),
+        emotionColor: finalColors[0],
+        emotionColorName: userSelectedEmotions.length > 1 ? 'Blended Night Gradient' : 'Twilight Indigo',
+        bedtimeAffirmation: 'You have carried enough for today. Let the night hold you in quiet warmth.',
+        topics: [
+          {
+            id: 'rhythm',
+            title: "Today's Rhythm",
+            icon: 'moon',
+            content: content || 'Today unfolded with moments of quiet purpose and steady presence.'
+          },
+          {
+            id: 'release',
+            title: 'Unpacking & Letting Go',
+            icon: 'wind',
+            content: 'Whatever remained unfinished today belongs to tomorrow. Tonight is solely for rest.'
+          },
+          {
+            id: 'gratitude',
+            title: 'Gratitude & Sweet Glow',
+            icon: 'sparkles',
+            content: 'Holding gratitude for the quiet sanctuary of the evening and the gift of closing your eyes.'
+          }
+        ],
+        summary: 'A quiet evening reflection and mindful wind-down.',
         reflection: text,
-        keyTakeaways: ['Deep self-awareness', 'Thoughtful reflection'],
-        actionItems: ['Continue journaling regularly'],
-        suggestedFollowUps: ['How did writing this make you feel?'],
+        keyTakeaways: ['Honoring the day as complete', 'Allowing yourself full permission to rest'],
+        actionItems: ['Take three deep slow breaths as your head touches the pillow'],
+        suggestedFollowUps: ['How does your body feel right now as you prepare for sleep?'],
         modelUsed
       });
     }
   } catch (error: any) {
     console.error('Error in /api/gemini/reflect:', error);
     res.status(500).json({ 
-      error: error?.message || 'Failed to generate reflection with Gemini AI' 
+      error: error?.message || 'Failed to generate bedtime reflection with Gemini AI' 
     });
   }
 });

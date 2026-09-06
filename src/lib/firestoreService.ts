@@ -34,10 +34,16 @@ export async function saveJournalEntry(
   const completeEntry: JournalEntry = {
     id: entryId,
     userId,
-    title: entry.title.trim() || 'Untitled Reflection',
-    content: entry.content.trim(),
-    category: entry.category || 'reflection',
-    mood: entry.mood || 'neutral',
+    title: entry.title?.trim() || 'Untitled Reflection',
+    content: entry.content?.trim() || '',
+    category: entry.category || 'daily',
+    mood: entry.mood || 'peaceful',
+    emotion: entry.emotion || entry.mood || 'Peaceful & Serene',
+    emotionColor: entry.emotionColor || '#5E5CE6',
+    emotionColorName: entry.emotionColorName || 'Twilight Indigo',
+    date: entry.date || new Date().toISOString().split('T')[0],
+    topics: entry.topics || [],
+    bedtimeAffirmation: entry.bedtimeAffirmation || '',
     tags: entry.tags || [],
     summary: entry.summary || '',
     keyTakeaways: entry.keyTakeaways || [],
@@ -46,7 +52,8 @@ export async function saveJournalEntry(
     toneUsed: entry.toneUsed || 'empathic',
     createdAt: entry.createdAt || now,
     updatedAt: now,
-    messageCount: entry.messageCount || 0
+    messageCount: entry.messageCount || 0,
+    stagedInput: entry.stagedInput || undefined
   };
 
   const payload = sanitizePayload(completeEntry);

@@ -1,27 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { subscribeAuthState, signInWithGoogle, logOut, type User } from './lib/firebase';
-import { subscribeUserEntries } from './lib/firestoreService';
+import { subscribeUserEntries, deleteJournalEntry } from './lib/firestoreService';
 import type { UserProfile, JournalEntry } from './types';
-import { Navbar } from './components/Navbar';
+import { Navbar, type NavView } from './components/Navbar';
 import { LandingHero } from './components/LandingHero';
+import { BedtimeStagedReflection } from './components/BedtimeStagedReflection';
+import { EmotionCalendarView } from './components/EmotionCalendarView';
+import { BedtimeReaderModal } from './components/BedtimeReaderModal';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { JournalEditor } from './components/JournalEditor';
 import { EntryHistory } from './components/EntryHistory';
 import { EntryDetailModal } from './components/EntryDetailModal';
-import { ThreatModelModal } from './components/ThreatModelModal';
 import { ToastContainer, type ToastMessage } from './components/Toast';
 import { Loader2 } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [currentView, setCurrentView] = useState<'editor' | 'history'>('editor');
+  const [currentView, setCurrentView] = useState<NavView>('winddown');
   
   // Entries state
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
+  const [readerEntry, setReaderEntry] = useState<JournalEntry | null>(null);
+  const [targetCalendarDate, setTargetCalendarDate] = useState<string | undefined>(undefined);
   
   // Modals & UI state
-  const [showThreatModel, setShowThreatModel] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // Show toast notification
@@ -83,7 +87,6 @@ export default function App() {
       showToast(`Welcome back, ${user.displayName || 'Journaler'}!`, 'success');
     } catch (err: any) {
       console.error('Sign in error:', err);
-      // If user closed popup, handle cleanly
       if (err?.code !== 'auth/popup-closed-by-user') {
         showToast(err?.message || 'Authentication failed', 'error');
       }
@@ -95,7 +98,7 @@ export default function App() {
     try {
       await logOut();
       showToast('Signed out safely', 'info');
-      setCurrentView('editor');
+      setCurrentView('winddown');
     } catch (err: any) {
       console.error('Sign out error:', err);
       showToast('Failed to sign out', 'error');
@@ -106,11 +109,34 @@ export default function App() {
     setSelectedEntry(entry);
   };
 
-  const handleEntryDeleted = (deletedId: string) => {
+  const handleOpenReader = (entry: JournalEntry) => {
+    setReaderEntry(entry);
+  };
+
+  const handleEntryDeleted = async (deletedId: string) => {
+    if (currentUser?.uid) {
+      try {
+        await deleteJournalEntry(currentUser.uid, deletedId);
+      } catch (e) {
+        console.warn('Delete in firestore failed or already removed:', e);
+      }
+    }
     setEntries((prev) => prev.filter((e) => e.id !== deletedId));
     if (selectedEntry?.id === deletedId) {
       setSelectedEntry(null);
     }
+    if (readerEntry?.id === deletedId) {
+      setReaderEntry(null);
+    }
+  };
+
+  const handleNavigateToCalendar = (date?: string) => {
+    setTargetCalendarDate(date);
+    setCurrentView('calendar');
+  };
+
+  const handleSelectDateToReflect = (dateStr: string) => {
+    setCurrentView('winddown');
   };
 
   if (authLoading) {
@@ -126,7 +152,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] text-[#E0E0E0] antialiased flex flex-col font-sans relative selection:bg-[#5E5CE6]/30 selection:text-[#5E5CE6]">
-      {/* Sophisticated Dot Matrix Texture */}
+      {/* Subtle Dot Matrix Ambiance */}
       <div className="absolute inset-0 bg-sophisticated-dots opacity-[0.07] pointer-events-none -z-0" />
       
       {/* Navigation Bar */}
@@ -137,27 +163,70 @@ export default function App() {
           onViewChange={setCurrentView}
           onNewReflection={() => {
             setSelectedEntry(null);
-            setCurrentView('editor');
+            setCurrentView('winddown');
           }}
-          onOpenThreatModel={() => setShowThreatModel(true)}
           onSignOut={handleSignOut}
         />
       </div>
 
       {/* Main Viewport */}
-      <main className="flex-1 relative z-10">
+      <main className="flex-1 relative z-10 pb-20 sm:pb-8">
         {!currentUser ? (
           <LandingHero
             onSignIn={handleSignIn}
-            onOpenThreatModel={() => setShowThreatModel(true)}
           />
         ) : (
           <div>
+            {/* 1. Mobile-friendly Staged Bedtime Wind-Down */}
+            {(currentView === 'winddown') && (
+              <BedtimeStagedReflection
+                userId={currentUser.uid}
+                onSaveSuccess={(saved) => {
+                  setEntries((prev) => {
+                    const idx = prev.findIndex((e) => e.id === saved.id);
+                    if (idx >= 0) {
+                      const updated = [...prev];
+                      updated[idx] = saved;
+                      return updated;
+                    }
+                    return [saved, ...prev];
+                  });
+                }}
+                onNavigateToCalendar={handleNavigateToCalendar}
+                onOpenReader={handleOpenReader}
+                showToast={showToast}
+              />
+            )}
+
+            {/* 2. Daily Emotion Color Calendar */}
+            {currentView === 'calendar' && (
+              <EmotionCalendarView
+                entries={entries}
+                initialDate={targetCalendarDate}
+                onSelectDateToReflect={handleSelectDateToReflect}
+                onOpenConversation={handleOpenConversation}
+                onOpenReader={handleOpenReader}
+                onDeleteEntry={handleEntryDeleted}
+                showToast={showToast}
+              />
+            )}
+
+            {/* 3. Past Nights Archive */}
+            {currentView === 'history' && (
+              <EntryHistory
+                userId={currentUser.uid}
+                entries={entries}
+                onSelectEntry={(entry) => setSelectedEntry(entry)}
+                onNewReflection={() => setCurrentView('winddown')}
+                showToast={showToast}
+              />
+            )}
+
+            {/* 4. Free-form Editor (optional) */}
             {currentView === 'editor' && (
               <JournalEditor
                 userId={currentUser.uid}
                 onSaveSuccess={(saved) => {
-                  // Keep list up to date
                   setEntries((prev) => {
                     const idx = prev.findIndex((e) => e.id === saved.id);
                     if (idx >= 0) {
@@ -172,19 +241,25 @@ export default function App() {
                 showToast={showToast}
               />
             )}
-
-            {currentView === 'history' && (
-              <EntryHistory
-                userId={currentUser.uid}
-                entries={entries}
-                onSelectEntry={(entry) => setSelectedEntry(entry)}
-                onNewReflection={() => setCurrentView('editor')}
-                showToast={showToast}
-              />
-            )}
           </div>
         )}
       </main>
+
+      {/* Mobile Sticky Bottom Navigation */}
+      {currentUser && (
+        <MobileBottomNav
+          currentView={currentView}
+          onViewChange={setCurrentView}
+        />
+      )}
+
+      {/* Modal: Bedtime Reader Mode (large comfortable text for reading before sleep) */}
+      {readerEntry && (
+        <BedtimeReaderModal
+          entry={readerEntry}
+          onClose={() => setReaderEntry(null)}
+        />
+      )}
 
       {/* Modal: Entry Details & Multi-Turn Chat */}
       {selectedEntry && currentUser && (
@@ -195,11 +270,6 @@ export default function App() {
           onEntryDeleted={handleEntryDeleted}
           showToast={showToast}
         />
-      )}
-
-      {/* Modal: Threat Model & OWASP Security Architecture */}
-      {showThreatModel && (
-        <ThreatModelModal onClose={() => setShowThreatModel(false)} />
       )}
 
       {/* Toast Notification Container */}

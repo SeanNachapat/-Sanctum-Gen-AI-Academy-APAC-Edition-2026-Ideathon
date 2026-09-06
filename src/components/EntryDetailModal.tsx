@@ -149,6 +149,19 @@ export const EntryDetailModal: React.FC<EntryDetailModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-[#1F1F23] px-6 py-4 bg-[#0D0D0F]">
           <div className="flex items-center gap-3">
+            {entry.emotionColor && (
+              <div 
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium"
+                style={{ 
+                  backgroundColor: `${entry.emotionColor}15`,
+                  borderColor: `${entry.emotionColor}40`,
+                  color: entry.emotionColor 
+                }}
+              >
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.emotionColor }} />
+                <span>{entry.emotion || entry.emotionColorName || entry.mood}</span>
+              </div>
+            )}
             <span className="rounded-lg bg-[#1C1C1E] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#5E5CE6] border border-[#2C2C2E]">
               {entry.category}
             </span>
@@ -244,10 +257,43 @@ export const EntryDetailModal: React.FC<EntryDetailModalProps> = ({
                 </div>
               </div>
 
+              {/* Bedtime Affirmation if present */}
+              {entry.bedtimeAffirmation && (
+                <div className="rounded-2xl border border-[#2E2E3E] bg-gradient-to-r from-[#161622] to-[#12121A] p-5 text-center space-y-1 shadow-lg">
+                  <span className="text-[10px] uppercase font-mono tracking-widest text-[#5E5CE6] block">
+                    Bedtime Whisper & Night Blessing
+                  </span>
+                  <p className="text-sm sm:text-base font-serif italic text-white leading-relaxed">
+                    "{entry.bedtimeAffirmation}"
+                  </p>
+                </div>
+              )}
+
+              {/* Separated Topics if present */}
+              {entry.topics && entry.topics.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#636366]">
+                    Separated Topics
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    {entry.topics.map((topic, idx) => (
+                      <div key={topic.id || idx} className="rounded-2xl border border-[#2C2C2E] bg-[#16161A] p-4 space-y-1.5">
+                        <h4 className="text-xs font-semibold text-[#E5E5EA]">
+                          {topic.title}
+                        </h4>
+                        <p className="text-xs sm:text-sm text-[#AEAEB2] leading-relaxed">
+                          {topic.content}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Original Journal Content */}
               <div className="rounded-2xl border border-[#2C2C2E] bg-[#1C1C1E]/60 p-6">
                 <h3 className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#636366] mb-3">
-                  Original Journal Entry
+                  Original Journal Content
                 </h3>
                 <div className="text-[#D1D1D6] text-sm leading-relaxed whitespace-pre-wrap font-serif">
                   {entry.content}

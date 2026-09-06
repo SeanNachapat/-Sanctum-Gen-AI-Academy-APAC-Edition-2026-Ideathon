@@ -1,6 +1,6 @@
 {
   "name": "Sanctum - Cognitive Sanctuary & Gemini Reflections",
-  "description": "A private, encrypted-by-rule journaling sanctuary powered by Firebase Auth, Cloud Firestore owner isolation, and Gemini AI reflections.",
-  "requestFramePermissions": [],
+  "description": "A mobile-first, tranquil bedtime wind-down sanctuary that separates evening reflection into calm stages, weaving entries into topic-based journals with daily emotion colors on an interactive calendar.",
+  "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

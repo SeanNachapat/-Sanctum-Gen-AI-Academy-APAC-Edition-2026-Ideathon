@@ -1,24 +1,20 @@
 import React, { useState } from 'react';
 import { 
+  Moon, 
   Sparkles, 
-  Lock, 
-  ShieldCheck, 
-  MessageSquareCode, 
-  Database, 
-  KeyRound, 
+  Calendar as CalendarIcon, 
+  BookOpen, 
   ArrowRight,
   BrainCircuit,
-  FileText,
-  CheckCircle2,
   AlertCircle
 } from 'lucide-react';
 
 interface LandingHeroProps {
   onSignIn: () => Promise<void>;
-  onOpenThreatModel: () => void;
+  onOpenThreatModel?: () => void;
 }
 
-export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn, onOpenThreatModel }) => {
+export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,23 +42,22 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn, onOpenThreat
       <div className="mx-auto max-w-4xl text-center">
         {/* Top Badges */}
         <div className="inline-flex items-center gap-2 rounded-full border border-[#2C2C2E] bg-[#1C1C1E] px-3.5 py-1.5 text-xs text-[#D1D1D6] backdrop-blur-md mb-8">
-          <span className="w-1.5 h-1.5 bg-[#30D158] rounded-full" />
-          <span className="text-[11px] uppercase tracking-wider text-[#AEAEB2]">Zero Insecure Defaults • Firestore Isolation</span>
+          <Moon className="h-3.5 w-3.5 text-[#5E5CE6]" />
+          <span className="text-[11px] uppercase tracking-wider text-[#AEAEB2]">Mindful Evening Wind-Down & Reflection</span>
           <span className="h-1 w-1 rounded-full bg-[#636366]" />
           <span className="text-[#5E5CE6] font-medium text-[11px]">Gemini 3.6 Flash</span>
         </div>
 
         {/* Headline */}
         <h1 className="text-4xl font-extrabold tracking-tight text-[#F2F2F7] sm:text-6xl font-serif italic">
-          Your Private Thinking Sanctuary,{' '}
+          Your Bedtime Sanctuary,{' '}
           <span className="bg-gradient-to-r from-[#5E5CE6] via-[#AEAEB2] to-white bg-clip-text text-transparent not-italic font-sans font-bold">
-            Reflected by Gemini
+            Reflected by Night
           </span>
         </h1>
 
         <p className="mt-6 text-base leading-relaxed text-[#8E8E93] sm:text-lg max-w-2xl mx-auto font-light">
-          Write unfiltered reflections, brainstorm strategies, and converse multi-turn with Gemini. 
-          Every thought is cryptographically isolated in your personal Firestore vault.
+          Unburden your mind in gentle stages before sleep. Weave your thoughts into topic-separated journals, track daily emotion colors, and rest with clarity.
         </p>
 
         {/* Error Alert if any */}
@@ -106,19 +101,10 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn, onOpenThreat
             <span>Sign in with Google</span>
             <ArrowRight className="h-4 w-4 text-neutral-600" />
           </button>
-
-          <button
-            id="view-threat-model-btn"
-            onClick={onOpenThreatModel}
-            className="flex h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-[#2C2C2E] bg-[#1C1C1E] px-6 text-xs font-medium text-[#D1D1D6] hover:bg-[#2C2C2E] hover:text-white transition-all cursor-pointer"
-          >
-            <ShieldCheck className="h-4 w-4 text-[#30D158]" />
-            <span>Threat Model & OWASP Review</span>
-          </button>
         </div>
 
         <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-[#636366]">
-          No passwords stored. Securely federated through Firebase Authentication.
+          Sign in effortlessly with your Google account.
         </p>
 
         {/* 4-Pillar Architectural Breakdown */}
@@ -126,21 +112,21 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn, onOpenThreat
           
           <div className="rounded-xl border border-[#2C2C2E] bg-[#1C1C1E]/60 p-5 backdrop-blur-sm hover:border-[#5E5CE6]/40 transition-colors">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#5E5CE6]/10 text-[#5E5CE6] mb-3 border border-[#5E5CE6]/20">
-              <KeyRound className="h-4 w-4" />
+              <Moon className="h-4 w-4" />
             </div>
-            <h3 className="text-xs uppercase tracking-wider font-semibold text-white">1. Secure Auth</h3>
+            <h3 className="text-xs uppercase tracking-wider font-semibold text-white">1. Bedtime Stages</h3>
             <p className="mt-1.5 text-xs text-[#8E8E93] leading-relaxed">
-              Google Sign-In with Firebase Auth. Tokens are verified with zero email/password retention.
+              Step-by-step evening reflection flow designed to quiet your mind before sleep.
             </p>
           </div>
 
           <div className="rounded-xl border border-[#2C2C2E] bg-[#1C1C1E]/60 p-5 backdrop-blur-sm hover:border-[#30D158]/40 transition-colors">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#30D158]/10 text-[#30D158] mb-3 border border-[#30D158]/20">
-              <Database className="h-4 w-4" />
+              <CalendarIcon className="h-4 w-4" />
             </div>
-            <h3 className="text-xs uppercase tracking-wider font-semibold text-white">2. User-Isolated Data</h3>
+            <h3 className="text-xs uppercase tracking-wider font-semibold text-white">2. Daily Emotion Colors</h3>
             <p className="mt-1.5 text-xs text-[#8E8E93] leading-relaxed">
-              Firestore security rules bind documents strictly to <code className="text-[#30D158] text-[10px]">request.auth.uid</code>.
+              Track your feelings each night with an evening spectrum of luminous colors.
             </p>
           </div>
 
@@ -148,19 +134,19 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn, onOpenThreat
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#5E5CE6]/10 text-[#5E5CE6] mb-3 border border-[#5E5CE6]/20">
               <BrainCircuit className="h-4 w-4" />
             </div>
-            <h3 className="text-xs uppercase tracking-wider font-semibold text-white">3. Gemini 3.6 Flash</h3>
+            <h3 className="text-xs uppercase tracking-wider font-semibold text-white">3. Topic Separation</h3>
             <p className="mt-1.5 text-xs text-[#8E8E93] leading-relaxed">
-              Resilient AI model ladder with fallback handling. Provides deep reflections, summaries, and action plans.
+              Gemini synthesizes your day into clear, peaceful themes and personalized bedtime affirmations.
             </p>
           </div>
 
-          <div className="rounded-xl border border-[#2C2C2E] bg-[#1C1C1E]/60 p-5 backdrop-blur-sm hover:border-[#5E5CE6]/40 transition-colors">
+          <div className="rounded-xl border border-[#2C2C2E] bg-[#1C1C1E]/60 p-5 backdrop-blur-sm hover:border-purple-500/40 transition-colors">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400 mb-3 border border-purple-500/20">
-              <MessageSquareCode className="h-4 w-4" />
+              <BookOpen className="h-4 w-4" />
             </div>
-            <h3 className="text-xs uppercase tracking-wider font-semibold text-white">4. Multi-Turn Chat</h3>
+            <h3 className="text-xs uppercase tracking-wider font-semibold text-white">4. Bedtime Reader</h3>
             <p className="mt-1.5 text-xs text-[#8E8E93] leading-relaxed">
-              Continue discussing your journal entry across multi-turn conversational threads saved in real-time.
+              A dimmed, high-contrast reader mode designed for comfortable reading in a dark room.
             </p>
           </div>
 
@@ -168,13 +154,13 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn, onOpenThreat
 
       </div>
 
-      {/* Footer / Tech spec */}
+      {/* Footer */}
       <div className="mx-auto mt-12 w-full max-w-4xl border-t border-[#1F1F23] pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] uppercase tracking-widest text-[#636366]">
         <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
-          <span>Cloud Run Service • Server-Side API Proxy • Secret Manager</span>
+          <Moon className="h-3.5 w-3.5 text-[#5E5CE6]" />
+          <span>Sanctum • Bedtime Wind-Down & Evening Reflections</span>
         </div>
-        <p>© Sanctum. All journal data isolated to authenticated owners.</p>
+        <p>© Sanctum. Rest well and awaken with clarity.</p>
       </div>
     </div>
   );

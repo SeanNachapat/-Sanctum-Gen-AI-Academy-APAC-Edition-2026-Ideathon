@@ -1,21 +1,20 @@
 import React from 'react';
 import { 
-  Sparkles, 
   LogOut, 
-  ShieldCheck, 
-  Plus, 
-  BookOpen, 
-  History, 
-  Cpu
+  Moon, 
+  Calendar as CalendarIcon, 
+  BookOpen
 } from 'lucide-react';
 import type { UserProfile } from '../types';
 
+export type NavView = 'winddown' | 'calendar' | 'history' | 'editor';
+
 interface NavbarProps {
   user: UserProfile | null;
-  currentView: 'editor' | 'history';
-  onViewChange: (view: 'editor' | 'history') => void;
+  currentView: NavView;
+  onViewChange: (view: NavView) => void;
   onNewReflection: () => void;
-  onOpenThreatModel: () => void;
+  onOpenThreatModel?: () => void;
   onSignOut: () => void;
 }
 
@@ -24,7 +23,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentView,
   onViewChange,
   onNewReflection,
-  onOpenThreatModel,
   onSignOut,
 }) => {
   return (
@@ -33,34 +31,13 @@ export const Navbar: React.FC<NavbarProps> = ({
         
         {/* Brand Logo & Title */}
         <div className="flex items-center gap-3">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#1C1C1E] via-[#2C2C2E] to-[#0A0A0B] p-0.5 shadow-lg shadow-[#5E5CE6]/15 border border-[#3A3A3C] group cursor-pointer">
+          <div 
+            onClick={() => onViewChange('winddown')}
+            className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#1C1C1E] via-[#2C2C2E] to-[#0A0A0B] p-0.5 shadow-lg shadow-[#5E5CE6]/15 border border-[#3A3A3C] group cursor-pointer"
+          >
             <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-[#5E5CE6]/20 to-transparent opacity-60 group-hover:opacity-100 transition-opacity" />
             <div className="relative flex h-full w-full items-center justify-center rounded-[10px] bg-[#0E0E11]">
-              <svg 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-5 w-5 text-[#5E5CE6] transition-transform duration-300 group-hover:scale-110"
-              >
-                <path 
-                  d="M12 2L3 7V17L12 22L21 17V7L12 2Z" 
-                  stroke="currentColor" 
-                  strokeWidth="1.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  className="opacity-70"
-                />
-                <path 
-                  d="M12 6L7 9V15L12 18L17 15V9L12 6Z" 
-                  fill="currentColor" 
-                  fillOpacity="0.15" 
-                  stroke="currentColor" 
-                  strokeWidth="1.2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                />
-                <circle cx="12" cy="12" r="2" fill="#30D158" className="animate-pulse" />
-              </svg>
+              <Moon className="h-4 w-4 text-[#5E5CE6] transition-transform duration-300 group-hover:scale-110" />
             </div>
           </div>
           <div>
@@ -71,7 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </div>
             <p className="hidden text-[10px] uppercase tracking-[0.2em] text-[#636366] sm:block">
-              Cognitive Sanctuary & Reflection Vault
+              Bedtime Sanctuary & Emotion Calendar
             </p>
           </div>
         </div>
@@ -80,48 +57,50 @@ export const Navbar: React.FC<NavbarProps> = ({
         {user ? (
           <div className="flex items-center gap-2 sm:gap-4">
             
-            {/* View Navigation */}
-            <div className="flex items-center rounded-lg bg-[#1C1C1E] p-1 border border-[#2C2C2E]">
+            {/* View Navigation (Desktop / Tablet) */}
+            <div className="hidden sm:flex items-center rounded-xl bg-[#141418] p-1 border border-[#22222A]">
               <button
-                id="nav-tab-editor"
+                id="nav-tab-winddown"
                 onClick={() => {
-                  onViewChange('editor');
+                  onViewChange('winddown');
                   onNewReflection();
                 }}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-                  currentView === 'editor'
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                  currentView === 'winddown' || currentView === 'editor'
                     ? 'bg-[#5E5CE6] text-white shadow-sm'
-                    : 'text-[#8E8E93] hover:text-[#D1D1D6] hover:bg-[#2C2C2E]/60'
+                    : 'text-[#8E8E93] hover:text-[#D1D1D6] hover:bg-[#202028]'
                 }`}
               >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Write</span>
+                <Moon className="h-3.5 w-3.5" />
+                <span>Wind Down</span>
+              </button>
+
+              <button
+                id="nav-tab-calendar"
+                onClick={() => onViewChange('calendar')}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                  currentView === 'calendar'
+                    ? 'bg-[#5E5CE6] text-white shadow-sm'
+                    : 'text-[#8E8E93] hover:text-[#D1D1D6] hover:bg-[#202028]'
+                }`}
+              >
+                <CalendarIcon className="h-3.5 w-3.5" />
+                <span>Calendar</span>
               </button>
 
               <button
                 id="nav-tab-history"
                 onClick={() => onViewChange('history')}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                   currentView === 'history'
                     ? 'bg-[#5E5CE6] text-white shadow-sm'
-                    : 'text-[#8E8E93] hover:text-[#D1D1D6] hover:bg-[#2C2C2E]/60'
+                    : 'text-[#8E8E93] hover:text-[#D1D1D6] hover:bg-[#202028]'
                 }`}
               >
-                <History className="h-3.5 w-3.5" />
-                <span>History</span>
+                <BookOpen className="h-3.5 w-3.5" />
+                <span>Past Nights</span>
               </button>
             </div>
-
-            {/* Security & Threat Model Info */}
-            <button
-              id="threat-model-btn"
-              onClick={onOpenThreatModel}
-              title="View Security & Agentic Threat Model"
-              className="hidden lg:flex items-center gap-1.5 rounded-lg border border-[#2C2C2E] bg-[#1C1C1E]/70 px-2.5 py-1.5 text-xs font-medium text-[#D1D1D6] hover:bg-[#2C2C2E] hover:text-white transition-colors cursor-pointer"
-            >
-              <span className="w-1.5 h-1.5 bg-[#30D158] rounded-full"></span>
-              <span className="text-[11px] text-[#30D158] font-medium">Firestore Synced</span>
-            </button>
 
             {/* User Profile Card */}
             <div className="flex items-center gap-3 border-l border-[#1F1F23] pl-3 sm:pl-4">
@@ -159,17 +138,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
           </div>
-        ) : (
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onOpenThreatModel}
-              className="flex items-center gap-1 text-xs text-[#8E8E93] hover:text-[#D1D1D6] cursor-pointer"
-            >
-              <ShieldCheck className="h-3.5 w-3.5 text-[#30D158]" />
-              <span className="text-[11px]">OWASP & Security Specs</span>
-            </button>
-          </div>
-        )}
+        ) : null}
 
       </div>
     </header>

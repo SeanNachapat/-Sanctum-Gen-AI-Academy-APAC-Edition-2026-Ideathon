@@ -166,7 +166,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
       });
 
       onSaveSuccess(savedEntry);
-      showToast('Reflection analyzed by Gemini & securely saved to Firestore!', 'success');
+      showToast('Reflection analyzed and saved to your journal ✨', 'success');
     } catch (err: any) {
       console.error('Error generating reflection:', err);
       showToast(`Error: ${err?.message || 'Failed to generate reflection'}`, 'error');
@@ -200,7 +200,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
       });
 
       onSaveSuccess(savedEntry);
-      showToast('Journal entry saved privately to Firestore!', 'success');
+      showToast('Journal entry saved to your journal', 'success');
       
       // Reset form
       setTitle('');
@@ -564,7 +564,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#1F1F23] pt-5">
             <div className="text-[10px] uppercase tracking-widest text-[#636366] flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#30D158]" />
-              <span>Isolated in <code className="text-[#8E8E93]">/users/{userId}/entries</code></span>
+              <span>Saved to your personal journal</span>
             </div>
 
             <div className="flex items-center gap-3 w-full sm:w-auto">

@@ -86,13 +86,13 @@ export const EntryHistory: React.FC<EntryHistoryProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-[#636366] font-semibold mb-1">
-            Vault Archives
+            Evening Archives
           </div>
           <h1 className="text-2xl font-bold text-[#F2F2F7] tracking-tight font-serif italic sm:text-3xl">
             Reflection History & Archives
           </h1>
           <p className="text-xs text-[#8E8E93] mt-1">
-            All past reflections, Gemini summaries, and multi-turn conversations in your private Firestore collection.
+            Browse through your past night reflections, topics, and bedtime blessings.
           </p>
         </div>
 
@@ -216,19 +216,26 @@ export const EntryHistory: React.FC<EntryHistoryProps> = ({
                   {/* Card Header: Category & Date */}
                   <div className="flex items-center justify-between mb-2.5">
                     <div className="flex items-center gap-2">
+                      {entry.emotionColor && (
+                        <span 
+                          className="h-2.5 w-2.5 rounded-full shadow-sm"
+                          style={{ backgroundColor: entry.emotionColor }}
+                          title={entry.emotion || entry.emotionColorName}
+                        />
+                      )}
                       <span className="rounded-md bg-[#0A0A0B] border border-[#2C2C2E] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#5E5CE6]">
-                        {entry.category}
+                        {entry.emotion || entry.category}
                       </span>
-                      {entry.mood && (
-                        <span className="text-xs text-[#8E8E93] capitalize">
-                          {entry.mood}
+                      {entry.topics && entry.topics.length > 0 && (
+                        <span className="text-[10px] text-[#8E8E93] bg-[#141418] px-1.5 py-0.5 rounded border border-[#222228]">
+                          {entry.topics.length} topics
                         </span>
                       )}
                     </div>
 
                     <div className="flex items-center gap-1.5 text-[10px] text-[#636366] font-mono">
                       <Clock className="h-3.5 w-3.5" />
-                      <span>{dateStr}</span>
+                      <span>{entry.date || dateStr}</span>
                     </div>
                   </div>
 
